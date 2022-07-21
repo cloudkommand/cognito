@@ -1,9 +1,9 @@
 {
     "components": {
-        "api": {
+        "identity_pool": {
             "type": "ext",
-            "displayname": "CK API Gateway",
-            "description": "Deploys an AWS APi Gateway. API Gateway sits on the front of your API and handles accepting and processing API calls",
+            "displayname": "CK Cognito Identity Pool",
+            "description": "Deploys an AWS Cognito Identity Pool. API Gateway sits on the front of your API and handles accepting and processing API calls",
             "cloud": "AWS",
             "resources": ["AWS::apigateway::api", "AWS::logs::loggroup"],
             "policy": {
@@ -24,10 +24,6 @@
                     ],
                     "Resource": "*"
                 }]
-            },
-            "environment_variables": {
-                "domain_name_extension_arn": "@domain_name:props.function_arn",
-                "route53_extension_arn": "@route53.record:props.function_arn"
             },
             "input": {
                 "type": "object",
