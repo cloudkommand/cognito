@@ -12,7 +12,7 @@ from extutil import remove_none_attributes, account_context, ExtensionHandler, \
 
 eh = ExtensionHandler()
 
-cognito = boto3.client("cognito")
+cognito = boto3.client("cognito-identity")
 def lambda_handler(event, context):
     try:
         print(f"event = {event}")
@@ -25,7 +25,7 @@ def lambda_handler(event, context):
         project_code = event.get("project_code")
         repo_id = event.get("repo_id")
         
-        identity_pool_name = cdef.get("name") or component_safe_name(project_code, repo_id, cname, max_chars=80)
+        identity_pool_name = cdef.get("name") or component_safe_name(project_code, repo_id, cname, max_chars=64)
         
         allow_unauthenticated_identities = cdef.get("allow_unauthenticated_identities", True)
         allow_classic_flow = cdef.get("allow_classic_flow") or False
@@ -39,7 +39,30 @@ def lambda_handler(event, context):
 
         developer_provider_name = cdef.get("developer_provider_name")
         oidc_provider_arns = cdef.get("oidc_provider_arns")
+
         cognito_identity_providers = cdef.get("cognito_identity_providers")
+
+        if :
+
+
+        cognito_provider_name = cdef.get("cognito_provider_name")
+        cognito_client_id = cdef.get("cognito_client_id")
+        
+        if not cognito_identity_providers:
+            if cdef.get("user_pool_client"):
+                user_pool_client = cdef.get("user_pool_client")
+                user_pool_client_region = user_pool_client.get("user_pool_id").split("_")[0]
+                cognito_identity_providers = [{
+                    "provider_name": "",
+                    "provider_client_id": cognito_client_id
+                }]
+            cognito_identity_providers = [
+                remove_none_attributes({
+                    "ProviderName": cognito_provider_name,
+                    "ClientId": cognito_client_id,
+                    "ServerSideTokenCheck": False,
+                })
+            ]
 
         saml_provider_arns = cdef.get("saml_provider_arns")
         tags = cdef.get("tags") or {}
@@ -78,9 +101,9 @@ def lambda_handler(event, context):
         attributes = {k:str(v) for k,v in attributes.items() if not isinstance(v, dict)}
         print(attributes)
 
-        get_queue_url(queue_name, account_number, region)
-        get_queue(attributes, tags)
+        get_identity_pool(attributes, identity_pool_id)
         create_identity_pool(attributes, account_number, region)
+        update_identity_pool(attributes, account_number, region)
         remove_tags()
         add_tags()
         delete_identity_pool()
@@ -94,51 +117,39 @@ def lambda_handler(event, context):
         eh.declare_return(200, 0, error_code=str(e))
         return eh.finish()
 
-@ext(handler=eh, op="get_queue_url")
-def get_queue_url(queue_name, account_number, region):
-    try:
-        response = cognito.get_queue_url(QueueName=queue_name)
-        eh.add_state({"queue_url": response["QueueUrl"]})
-        eh.add_op("get_queue")
-
-        eh.add_props({
-            "arn": gen_cognito_queue_arn(queue_name, account_number, region),
-            "url": response["QueueUrl"],
-            "name": queue_name
-        })
-
-        eh.add_links({
-            "Queue": gen_cognito_queue_link(region, response["QueueUrl"])
-        })
-    except ClientError as e:
-        if e.response["Error"]["Code"] == "AWS.SimpleQueueService.NonExistentQueue":
-            eh.add_op("create_queue")
-        else:
-            handle_common_errors(e, eh, "Get Queue Url Failure", 0)
-
 @ext(handler=eh, op="get_identity_pool")
 def get_identity_pool(attributes, identity_pool_id):
-    queue_url = eh.state["queue_url"]
+    tags = attributes.get("IdentityPoolTags") or {}
 
     try:
         response = cognito.describe_identity_pool(
             IdentityPoolId=identity_pool_id
         )
+
+        current_tags = response.pop("IdentityPoolTags")
         eh.add_log("Got Identity Pool", response)
-        current_attributes = response["Attributes"]
-        print(f"current_attributes = {current_attributes}")
+        print(f"current_attributes = {response}")
         print(f"attributes = {attributes}")
         for k,v in attributes.items():
             if str(current_attributes.get(k)).lower() != str(v).lower():
-                eh.add_op("set_queue_attributes")
+                eh.add_op("update_identity_pool")
                 print(k)
                 print(v)
                 print(type(k))
                 print(type(v))
                 break
 
+        if tags != current_tags:
+            remove_tags = [k for k in current_tags.keys() if k not in tags]
+            add_tags = {k:v for k,v in tags.items() if v != current_tags.get(k)}
+            if remove_tags:
+                eh.add_op("remove_tags", remove_tags)
+            if add_tags:
+                eh.add_op("add_tags", add_tags)
+
         if not eh.ops.get("set_queue_attributes"):
             eh.add_log("Nothing to do. Exiting", {"current_attributes": current_attributes, "desired_attributes": attributes})
+
 
     except ClientError as e:
         if e.response["Error"]["Code"] == "AWS.SimpleQueueService.NonExistentQueue":
@@ -146,25 +157,31 @@ def get_identity_pool(attributes, identity_pool_id):
         else:
             handle_common_errors(e, eh, "Get Queue Attributes Failure", 0)
 
-    try:
-        tags_response = cognito.list_queue_tags(QueueUrl=queue_url)
-        current_tags = tags_response.get("Tags") or {}
-    except ClientError as e:
-        handle_common_errors(e, eh, "List Queue Tags Error", 10)
-
-    if tags != current_tags:
-        remove_tags = [k for k in current_tags.keys() if k not in tags]
-        add_tags = {k:v for k,v in tags.items() if k not in current_tags.keys()}
-        if remove_tags:
-            eh.add_op("remove_tags", remove_tags)
-        if add_tags:
-            eh.add_op("add_tags", add_tags)
-
 
 @ext(handler=eh, op="create_identity_pool")
 def create_identity_pool(attributes, account_number, region):
     try:
         response = cognito.create_identity_pool(**attributes)
+        eh.add_log("Created Identity Pool", response)
+        eh.add_props({
+            "name": response['IdentityPoolName'],
+            "id": response["IdentityPoolId"],
+            "arn": gen_cognito_identity_pool_arn(response['IdentityPoolName'], account_number, region)
+        })
+
+        eh.add_links({
+            "Identity Pool": gen_cognito_identity_pool_link(region, response["QueueUrl"])
+        })
+
+    except ClientError as e:
+        handle_common_errors(e, eh, "Error Creating Identity Pool", 20, [
+            "InvalidParameterException", "NotAuthorizedException"
+        ])
+
+@ext(handler=eh, op="update_identity_pool")
+def update_identity_pool(attributes, account_number, region):
+    try:
+        response = cognito.update_identity_pool(**attributes)
         eh.add_log("Created Identity Pool", response)
         eh.add_props({
             "name": response['IdentityPoolName'],
