@@ -117,7 +117,7 @@ def lambda_handler(event, context):
             "AdvancedSecurityMode": cdef.get("advanced_security_mode") or "OFF",
         }
 
-        required_attributes = cdef.get("sign_up_required_attributes")
+        required_attributes = cdef.get("sign_up_required_attributes") or []
 
         schema = [
             {
