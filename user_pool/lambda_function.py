@@ -28,12 +28,14 @@ def lambda_handler(event, context):
         user_pool_name = cdef.get("name") or component_safe_name(project_code, repo_id, cname, max_chars=100)
         
         password_policy = cdef.get("password_policy") or {
-            "MinimumLength": 8,
-            "RequireLowercase": True,
-            "RequireUppercase": True,
-            "RequireNumbers": True,
-            "RequireSymbols": True,
-            "TemporaryPasswordValidityDays": 7
+            "PasswordPolicy": {
+                "MinimumLength": 8,
+                "RequireLowercase": True,
+                "RequireUppercase": True,
+                "RequireNumbers": True,
+                "RequireSymbols": True,
+                "TemporaryPasswordValidityDays": 7
+            }
         }
 
         lambda_config = remove_none_attributes({
@@ -67,7 +69,7 @@ def lambda_handler(event, context):
         email_verification_message = cdef.get("email_verification_message") or "Your verification code is {####}"
         email_verification_subject = cdef.get("email_verification_subject") or "Your Verification Code"
         verification_message_template = remove_none_attributes({
-            "SMSMessage": sms_verification_message,
+            "SmsMessage": sms_verification_message,
             "EmailMessage": email_verification_message,
             "EmailSubject": email_verification_subject,
             "DefaultEmailOption": "CONFIRM_WITH_CODE",
@@ -91,17 +93,17 @@ def lambda_handler(event, context):
         elif remember_device == "NEVER":
             device_config = None
 
-        email_configuration = {
+        email_configuration = remove_none_attributes({
             "SourceArn": cdef.get("ses_email_address_arn"),
             "ReplyToEmailAddress": cdef.get("reply_to_email_address"),
             "EmailSendingAccount": "DEVELOPER" if cdef.get("ses_email_address_arn") else "COGNITO_DEFAULT",
-        }
+        })
 
-        sms_configuration = {
+        sms_configuration = remove_none_attributes({
             "SnsCallerArn": cdef.get("sms_role_arn"),
             "ExternalId": cdef.get("sms_external_id"),
             "SnsRegion": cdef.get("sms_region")
-        }
+        }) or None
 
         admin_create_user_config = {
             "AllowAdminCreateUserOnly": cdef.get("allow_admin_create_user_only") or False,
