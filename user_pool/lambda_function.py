@@ -28,14 +28,12 @@ def lambda_handler(event, context):
         user_pool_name = cdef.get("name") or component_safe_name(project_code, repo_id, cname, max_chars=100)
         
         password_policy = cdef.get("password_policy") or {
-            "PasswordPolicy": {
-                "MinimumLength": 8,
-                "RequireLowercase": True,
-                "RequireUppercase": True,
-                "RequireNumbers": True,
-                "RequireSymbols": True,
-                # "TemporaryPasswordValidityDays": 7
-            }
+            "MinimumLength": 8,
+            "RequireLowercase": True,
+            "RequireUppercase": True,
+            "RequireNumbers": True,
+            "RequireSymbols": True,
+            # "TemporaryPasswordValidityDays": 7
         }
 
         lambda_config = remove_none_attributes({
@@ -389,7 +387,7 @@ def lambda_handler(event, context):
         
         attributes = remove_none_attributes({
             "PoolName": user_pool_name,
-            "Policies": password_policy,
+            "Policies": {"PasswordPolicy": password_policy},
             "LambdaConfig": lambda_config,
             "AutoVerifiedAttributes": auto_verified_attributes,
             "AliasAttributes": alias_attributes,
