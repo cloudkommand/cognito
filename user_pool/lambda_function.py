@@ -34,7 +34,7 @@ def lambda_handler(event, context):
                 "RequireUppercase": True,
                 "RequireNumbers": True,
                 "RequireSymbols": True,
-                "TemporaryPasswordValidityDays": 7
+                # "TemporaryPasswordValidityDays": 7
             }
         }
 
@@ -107,7 +107,7 @@ def lambda_handler(event, context):
 
         admin_create_user_config = {
             "AllowAdminCreateUserOnly": cdef.get("allow_admin_create_user_only") or False,
-            "TemporaryPasswordValidityDays": cdef.get("temporary_password_validity_days") or 7,
+            "UnusedAccountValidityDays": cdef.get("unused_invite_validity_days") or 7,
             "InviteMessageTemplate": {
                 "SMSMessage": cdef.get("invite_sms_message") or 'Your username is {username} and temporary password is {####}. ',
                 "EmailMessage": cdef.get("invite_email_message") or 'Your username is {username} and temporary password is {####}. ',
