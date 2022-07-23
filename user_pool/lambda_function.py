@@ -469,7 +469,7 @@ def create_user_pool(attributes, account_number, region):
         })
 
         eh.add_links({
-            "User Pool": gen_cognito_user_pool_link(region, response["Id"])
+            "User Pool": gen_cognito_user_pool_link(region, user_pool["Id"])
         })
 
     except ClientError as e:
