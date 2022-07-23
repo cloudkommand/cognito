@@ -369,10 +369,13 @@ def lambda_handler(event, context):
             pass
 
         elif event.get("op") == "upsert":
-            eh.add_op("get_user_pool")
-            eh.add_state({
-                "user_pool_id": prev_state.get("props", {}).get("id")
-            })
+            if prev_state.get("props", {}).get("id"):
+                eh.add_op("get_user_pool")
+                eh.add_state({
+                    "user_pool_id": prev_state.get("props", {}).get("id")
+                })
+            else:
+                eh.add_op("create_user_pool")
 
             # if domain:
             #     eh.add_op("get_domain")
