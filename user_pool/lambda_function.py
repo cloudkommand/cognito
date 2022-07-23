@@ -305,13 +305,13 @@ def lambda_handler(event, context):
                 'MaxLength': '2048'
                 }
             },
-            {
-                'Name': 'phone_number_verified',
-                'AttributeDataType': 'Boolean',
-                'DeveloperOnlyAttribute': False,
-                'Mutable': True,
-                'Required': False
-            },
+            # {
+            #     'Name': 'phone_number_verified',
+            #     'AttributeDataType': 'Boolean',
+            #     'DeveloperOnlyAttribute': False,
+            #     'Mutable': True,
+            #     'Required': False
+            # },
             {
                 'Name': 'address',
                 'AttributeDataType': 'String',
