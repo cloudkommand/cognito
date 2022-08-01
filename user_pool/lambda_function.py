@@ -514,8 +514,8 @@ def update_user_pool(attributes, account_number, region):
         update_attributes["UserPoolId"] = user_pool_id
 
         response = cognito.update_user_pool(**update_attributes)
-        print(f"response = {response}")
-        user_pool = response["UserPool"]
+        # print(f"response = {response}")
+        # user_pool = response["UserPool"]
         eh.add_log("Updated User Pool", response)
         # eh.add_props({
         #     "name": user_pool['Name'],
