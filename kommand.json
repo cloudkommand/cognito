@@ -254,19 +254,15 @@
             "props": {
                 "name": {
                     "type": "string",
-                    "description": "The domain name (possibly generated)"
+                    "description": "The name of the user pool, possibly auto-generated"
                 },
-                "certificate_arn": {
+                "id": {
                     "type": "string",
-                    "description": "The ARN of the ACM certificate that is used when hitting this domain name"
+                    "description": "The ID of the user pool, which is part of the URL. Pattern '{region}_xxxxxxxxx'"
                 },
-                "hosted_zone_id": {
+                "arn": {
                     "type": "string",
-                    "description": "The hosted zone ID of this domain name"
-                },
-                "api_gateway_domain_name": {
-                    "type": "string",
-                    "description": "An AWS-internal domain name for the API"
+                    "description": "The ARN of the user pool"
                 }
             },
             "input": {

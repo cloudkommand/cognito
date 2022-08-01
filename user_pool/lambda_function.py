@@ -413,7 +413,7 @@ def lambda_handler(event, context):
         # attributes = {k:str(v) for k,v in attributes.items() if not isinstance(v, dict)}
         print(attributes)
 
-        get_user_pool(attributes, cdef)
+        get_user_pool(attributes, cdef, region)
         create_user_pool(attributes, account_number, region)
         update_user_pool(attributes, account_number, region)
         delete_user_pool()
@@ -428,7 +428,7 @@ def lambda_handler(event, context):
         return eh.finish()
 
 @ext(handler=eh, op="get_user_pool")
-def get_user_pool(attributes, cdef,):
+def get_user_pool(attributes, cdef, region):
     user_pool_id = eh.state["user_pool_id"]
     try:
         response = cognito.describe_user_pool(
@@ -461,6 +461,16 @@ def get_user_pool(attributes, cdef,):
                 print(type(k))
                 print(type(v))
                 break
+
+        eh.add_props({
+            "name": user_pool['Name'],
+            "id": user_pool["Id"],
+            "arn": user_pool["Arn"]
+        })
+
+        eh.add_links({
+            "User Pool": gen_cognito_user_pool_link(region, user_pool["Id"])
+        })
 
     except ClientError as e:
         if e.response["Error"]["Code"] == "ResourceNotFoundException":
@@ -506,16 +516,16 @@ def update_user_pool(attributes, account_number, region):
         response = cognito.update_user_pool(**update_attributes)
         print(f"response = {response}")
         user_pool = response["UserPool"]
-        eh.add_log("Created User Pool", response)
-        eh.add_props({
-            "name": user_pool['Name'],
-            "id": user_pool["Id"],
-            "arn": user_pool["Arn"]
-        })
+        eh.add_log("Updated User Pool", response)
+        # eh.add_props({
+        #     "name": user_pool['Name'],
+        #     "id": user_pool["Id"],
+        #     "arn": user_pool["Arn"]
+        # })
 
-        eh.add_links({
-            "User Pool": gen_cognito_user_pool_link(region, response["Id"])
-        })
+        # eh.add_links({
+        #     "User Pool": gen_cognito_user_pool_link(region, response["Id"])
+        # })
 
     except ClientError as e:
         handle_common_errors(e, eh, "Error Creating User Pool", 20, [
