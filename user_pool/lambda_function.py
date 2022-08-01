@@ -439,7 +439,17 @@ def get_user_pool(attributes, cdef,):
         eh.add_log("Got User Pool", response)
         print(f"current_attributes = {user_pool}")
         for k,v in attributes.items():
-            if k not in ["Schema", "PoolName"] and (str(user_pool.get(k)).lower() != str(v).lower()):
+            if k == "Policies":
+                current_pp = user_pool["Policies"].get("PasswordPolicy", {})
+                desired_pp = v["PasswordPolicy"]
+                _ = current_pp.pop("TemporaryPasswordValidityDays", None)
+                print(f"current_pp = {current_pp}")
+                print(f"desired_pp = {desired_pp}")
+                if current_pp != desired_pp:
+                    eh.add_op("update_user_pool", {"id": user_pool_id, "attributes": attributes})
+                    break
+                
+            elif k not in ["Schema", "PoolName"] and (str(user_pool.get(k)).lower() != str(v).lower()):
                 eh.add_op("update_user_pool")
                 print(k)
                 print(v)
