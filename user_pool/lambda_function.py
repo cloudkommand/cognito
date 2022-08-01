@@ -438,7 +438,12 @@ def get_user_pool(attributes, cdef,):
         user_pool = response["UserPool"]
         eh.add_log("Got User Pool", response)
         print(f"current_attributes = {user_pool}")
+
+        #Loop through the attributes and compare them to the current attributes
+        #If they are different, then update the user pool
         for k,v in attributes.items():
+
+            #If we are working with the password policy, remove temp_valid_days from comparison
             if k == "Policies":
                 current_pp = user_pool["Policies"].get("PasswordPolicy", {})
                 desired_pp = v["PasswordPolicy"]
@@ -499,6 +504,7 @@ def update_user_pool(attributes, account_number, region):
         update_attributes["UserPoolId"] = user_pool_id
 
         response = cognito.update_user_pool(**update_attributes)
+        print(f"response = {response}")
         user_pool = response["UserPool"]
         eh.add_log("Created User Pool", response)
         eh.add_props({
