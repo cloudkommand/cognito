@@ -611,11 +611,6 @@
                         "description": "Pass LEGACY if you want an exception thrown if the user does not exist. Otherwise the user not existing is treated the same as any other incorrect login",
                         "default": "ENABLED",
                         "enum": ["ENABLED", "LEGACY"]
-                    },
-                    "enable_propagate_additional_user_context_data": {
-                        "type": "boolean",
-                        "description": "If true, the user context data can be sent to Amazon Cognito advanced security.",
-                        "default": false
                     }
                 }
             }

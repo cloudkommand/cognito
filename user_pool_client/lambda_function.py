@@ -40,7 +40,7 @@ def lambda_handler(event, context):
         refresh_token_unit = "minutes"
         id_token_expiration_minutes = cdef.get("id_token_expiration_minutes", 60)
         if refresh_token_expiration_minutes % (60*24) == 0:
-            refresh_token_expiration_minutes = refresh_token_expiration_minutes /(60*24)
+            refresh_token_expiration_minutes = int(refresh_token_expiration_minutes /(60*24))
             refresh_token_unit = "days"
 
         read_attributes = cdef.get("read_attributes") or None
@@ -58,7 +58,7 @@ def lambda_handler(event, context):
 
         prevent_user_existence_errors = cdef.get("prevent_user_existence_errors") or "ENABLED"
         token_revocation = cdef.get("token_revocation") or False
-        enable_propagate_additional_user_context_data = cdef.get("enable_propagate_additional_user_context_data") or False
+        # enable_propagate_additional_user_context_data = cdef.get("enable_propagate_additional_user_context_data") or False
 
         
         pass_back_data = event.get("pass_back_data", {})
@@ -108,7 +108,7 @@ def lambda_handler(event, context):
             "AllowedOAuthScopes": oauth_scopes,
             "PreventUserExistenceErrors": prevent_user_existence_errors,
             "EnableTokenRevocation": token_revocation,
-            "EnablePropagateAdditionalUserContextData": enable_propagate_additional_user_context_data
+            # "EnablePropagateAdditionalUserContextData": enable_propagate_additional_user_context_data
         })
 
         # attributes = {k:str(v) for k,v in attributes.items() if not isinstance(v, dict)}
