@@ -511,15 +511,19 @@
             "props": {
                 "name": {
                     "type": "string",
-                    "description": "The name of the user pool, possibly auto-generated"
+                    "description": "The name of the client, possibly auto-generated"
                 },
                 "id": {
                     "type": "string",
-                    "description": "The ID of the user pool, which is part of the URL. Pattern '{region}_xxxxxxxxx'"
+                    "description": "The ID of the client"
                 },
-                "arn": {
+                "secret": {
                     "type": "string",
-                    "description": "The ARN of the user pool"
+                    "description": "The secret associated with the client, to be used in combination with the client ID"
+                },
+                "user_pool_id": {
+                    "type": "string",
+                    "description": "The ID of the user pool to which the client belongs"
                 }
             },
             "input": {

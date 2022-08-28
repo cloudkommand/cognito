@@ -535,7 +535,7 @@ def update_user_pool(attributes, account_number, region):
         ])
 
 def gen_cognito_user_pool_link(region, user_pool_id):
-    return f"https://{region}.console.aws.amazon.com/cognito/users?region={region}/home?region={region}#/pool/{user_pool_id}/details"
+    return f"https://{region}.console.aws.amazon.com/cognito/users?region={region}/pool/{user_pool_id}/details"
 
 @ext(handler=eh, op="delete_user_pool")
 def delete_user_pool():

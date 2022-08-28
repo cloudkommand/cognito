@@ -29,6 +29,9 @@ def lambda_handler(event, context):
         user_pool_id = cdef.get("user_pool_id")
         if not user_pool_id:
             raise Exception(f"Must pass user_pool_id")
+        if prev_state and prev_state.get("props", {}).get("user_pool_id") != user_pool_id:
+            eh.add_log("Cannot Change User Pool ID")
+            raise Exception(f"Cannot Change User Pool ID")
 
         generate_secret = cdef.get("generate_secret", True)
 
@@ -64,12 +67,12 @@ def lambda_handler(event, context):
 
         elif event.get("op") == "upsert":
             if prev_state.get("props", {}).get("id"):
-                eh.add_op("get_user_pool")
+                eh.add_op("get_user_pool_client")
                 eh.add_state({
-                    "user_pool_id": prev_state.get("props", {}).get("id")
+                    "user_pool_client_id": prev_state.get("props", {}).get("id")
                 })
             else:
-                eh.add_op("create_user_pool")
+                eh.add_op("create_user_pool_client")
 
             # if domain:
             #     eh.add_op("get_domain")
@@ -77,7 +80,10 @@ def lambda_handler(event, context):
             #     eh.add_op("delete_domain", {"domain": domain})
 
         elif event.get("op") == "delete":
-            eh.add_op("delete_user_pool", {"id":prev_state.get("props", {}).get("id"), "only_delete": True})
+            eh.add_op("delete_user_pool_client", {
+                "id":prev_state.get("props", {}).get("id"), 
+                "user_pool_id": user_pool_id
+            })
         
         attributes = remove_none_attributes({
             "UserPoolId": user_pool_id,
@@ -108,10 +114,10 @@ def lambda_handler(event, context):
         # attributes = {k:str(v) for k,v in attributes.items() if not isinstance(v, dict)}
         print(attributes)
 
-        get_user_pool(attributes, cdef, region)
-        create_user_pool(attributes, account_number, region)
-        update_user_pool(attributes, account_number, region)
-        delete_user_pool()
+        get_user_pool_client(attributes, cdef, region, user_pool_id)
+        create_user_pool_client(attributes, account_number, region)
+        update_user_pool_client(attributes, account_number, region)
+        delete_user_pool_client()
             
         return eh.finish()
 
@@ -122,35 +128,26 @@ def lambda_handler(event, context):
         eh.declare_return(200, 0, error_code=str(e))
         return eh.finish()
 
-@ext(handler=eh, op="get_user_pool")
-def get_user_pool(attributes, cdef, region):
-    user_pool_id = eh.state["user_pool_id"]
+@ext(handler=eh, op="get_user_pool_client")
+def get_user_pool_client(attributes, cdef, region, user_pool_id):
+    user_pool_client_id = eh.state["user_pool_client_id"]
     try:
-        response = cognito.describe_user_pool(
-            UserPoolId=user_pool_id
+        response = cognito.describe_user_pool_client(
+            UserPoolId=user_pool_id,
+            ClientId=user_pool_client_id
         )
 
-        user_pool = response["UserPool"]
-        eh.add_log("Got User Pool", response)
-        print(f"current_attributes = {user_pool}")
+        user_pool_client = response["UserPoolClient"]
+        eh.add_log("Got User Pool Client", response)
+        print(f"current_attributes = {user_pool_client}")
 
         #Loop through the attributes and compare them to the current attributes
         #If they are different, then update the user pool
         for k,v in attributes.items():
 
             #If we are working with the password policy, remove temp_valid_days from comparison
-            if k == "Policies":
-                current_pp = user_pool["Policies"].get("PasswordPolicy", {})
-                desired_pp = v["PasswordPolicy"]
-                _ = current_pp.pop("TemporaryPasswordValidityDays", None)
-                print(f"current_pp = {current_pp}")
-                print(f"desired_pp = {desired_pp}")
-                if current_pp != desired_pp:
-                    eh.add_op("update_user_pool", {"id": user_pool_id, "attributes": attributes})
-                    break
-                
-            elif k not in ["Schema", "PoolName"] and (str(user_pool.get(k)).lower() != str(v).lower()):
-                eh.add_op("update_user_pool")
+            if user_pool_client.get(k) != v:
+                eh.add_op("update_user_pool_client", {"id": user_pool_client_id, "attributes": attributes})
                 print(k)
                 print(v)
                 print(type(k))
@@ -158,94 +155,85 @@ def get_user_pool(attributes, cdef, region):
                 break
 
         eh.add_props({
-            "name": user_pool['Name'],
-            "id": user_pool["Id"],
-            "arn": user_pool["Arn"]
+            "name": user_pool_client['ClientName'],
+            "id": user_pool_client["ClientId"],
+            "secret": user_pool_client["ClientSecret"],
+            "user_pool_id": user_pool_client["UserPoolId"]
         })
 
         eh.add_links({
-            "User Pool": gen_cognito_user_pool_link(region, user_pool["Id"])
+            "User Pool Client": gen_cognito_user_pool_client_link(region, user_pool_client["UserPoolId"])
         })
 
     except ClientError as e:
         if e.response["Error"]["Code"] == "ResourceNotFoundException":
-            eh.add_op("create_user_pool")
+            eh.add_op("create_user_pool_client")
         else:
-            handle_common_errors(e, eh, "Get User Pool Failure", 0)
+            handle_common_errors(e, eh, "Get User Pool Client Failure", 0)
 
 
-@ext(handler=eh, op="create_user_pool")
-def create_user_pool(attributes, account_number, region):
+@ext(handler=eh, op="create_user_pool_client")
+def create_user_pool_client(attributes, account_number, region):
     try:
-        response = cognito.create_user_pool(**attributes)
-        user_pool = response["UserPool"]
-        eh.add_log("Created User Pool", response)
+        response = cognito.create_user_pool_client(**attributes)
+        user_pool_client = response["UserPoolClient"]
+        eh.add_log("Created User Pool Client", response)
         eh.add_props({
-            "name": user_pool['Name'],
-            "id": user_pool["Id"],
-            "arn": user_pool["Arn"]
+            "name": user_pool_client['ClientName'],
+            "id": user_pool_client["ClientId"],
+            "secret": user_pool_client["ClientSecret"],
+            "user_pool_id": user_pool_client["UserPoolId"]
         })
 
         eh.add_links({
-            "User Pool": gen_cognito_user_pool_link(region, user_pool["Id"])
+            "User Pool Clients": gen_cognito_user_pool_client_link(region, user_pool_client["UserPoolId"])
         })
 
     except ClientError as e:
-        handle_common_errors(e, eh, "Error Creating User Pool", 20, [
+        handle_common_errors(e, eh, "Error Creating User Pool Client", 20, [
             "InvalidParameterException", "NotAuthorizedException",
-            "LimitExceededException", "InvalidSmsRoleAccessPolicyException",
-            "InvalidSmsRoleTrustRelationshipException", "InvalidEmailRoleAccessPolicyException"
+            "LimitExceededException", "ScopeDoesNotExistException",
+            "InvalidOAuthFlowException"
         ])
 
-@ext(handler=eh, op="update_user_pool")
-def update_user_pool(attributes, account_number, region):
-    user_pool_id = eh.state["user_pool_id"]
+@ext(handler=eh, op="update_user_pool_client")
+def update_user_pool_client(attributes, account_number, region):
+    user_pool_client_id = eh.ops["update_user_pool_client"]["id"]
     try:
         update_attributes = {
             k:v for k,v in attributes.items() if 
-            k not in ["PoolName", "AliasAttributes", "UsernameAttributes", 
-            "UsernameConfiguration", "Schema"]
+            k not in ["GenerateSecret"]
         }
-        update_attributes["UserPoolId"] = user_pool_id
+        update_attributes["ClientId"] = user_pool_client_id
 
-        response = cognito.update_user_pool(**update_attributes)
-        # print(f"response = {response}")
-        # user_pool = response["UserPool"]
-        eh.add_log("Updated User Pool", response)
-        # eh.add_props({
-        #     "name": user_pool['Name'],
-        #     "id": user_pool["Id"],
-        #     "arn": user_pool["Arn"]
-        # })
-
-        # eh.add_links({
-        #     "User Pool": gen_cognito_user_pool_link(region, response["Id"])
-        # })
+        response = cognito.update_user_pool_client(**update_attributes)
+        eh.add_log("Updated User Pool Client", response)
 
     except ClientError as e:
-        handle_common_errors(e, eh, "Error Creating User Pool", 20, [
+        handle_common_errors(e, eh, "Error Updating User Pool Client", 20, [
             "InvalidParameterException", "NotAuthorizedException",
-            "LimitExceededException", "InvalidSmsRoleAccessPolicyException",
-            "InvalidSmsRoleTrustRelationshipException", "InvalidEmailRoleAccessPolicyException"
+            "LimitExceededException", "ScopeDoesNotExistException",
+            "InvalidOAuthFlowException"
         ])
 
-def gen_cognito_user_pool_link(region, user_pool_id):
-    return f"https://{region}.console.aws.amazon.com/cognito/users?region={region}/home?region={region}#/pool/{user_pool_id}/details"
+def gen_cognito_user_pool_client_link(region, user_pool_id):
+    return f"https://{region}.console.aws.amazon.com/cognito/users?region={region}/pool/{user_pool_id}/clients"
 
-@ext(handler=eh, op="delete_user_pool")
-def delete_user_pool():
-    op_info = eh.ops['delete_user_pool']
-    user_pool_id = op_info['id']
-    only_delete = op_info.get("only_delete")
+@ext(handler=eh, op="delete_user_pool_client")
+def delete_user_pool_client():
+    op_info = eh.ops['delete_user_pool_client']
+    user_pool_client_id = op_info['id']
+    user_pool_id = op_info['user_pool_id']
 
     try:
-        cognito.delete_user_pool(
-            UserPoolId = user_pool_id
+        cognito.delete_user_pool_client(
+            UserPoolId = user_pool_id,
+            ClientId = user_pool_client_id
         )
-        eh.add_log("User Pool Deleted", {"user_pool_id": user_pool_id})
+        eh.add_log("User Pool Client Deleted", {"user_pool_client_id": user_pool_client_id})
 
     except ClientError as e:
         if e.response['Error']['Code'] == 'ResourceNotFoundException':
-            eh.add_log("Old User Pool Doesn't Exist", {"user_pool_id": user_pool_id})
+            eh.add_log("Old User Pool Client Doesn't Exist", {"user_pool_client_id": user_pool_client_id})
         else:
-            handle_common_errors(e, eh, "Error Deleting User Pool", progress=(95 if only_delete else 20))
+            handle_common_errors(e, eh, "Error Deleting User Pool Client", progress=20)
