@@ -53,7 +53,7 @@ def lambda_handler(event, context):
         logout_urls = cdef.get("logout_urls") or None
         default_redirect_uri = cdef.get("default_redirect_uri")
 
-        oauth_flows = cdef.get("oauth_flows") or ["code", "implicit", "client_credentials"]
+        oauth_flows = cdef.get("oauth_flows") or ["client_credentials"]
         oauth_scopes = cdef.get("oauth_scopes")
 
         prevent_user_existence_errors = cdef.get("prevent_user_existence_errors") or "ENABLED"
