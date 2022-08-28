@@ -93,9 +93,9 @@ def lambda_handler(event, context):
             "AccessTokenValidity": access_token_expiration_minutes,
             "IdTokenValidity": id_token_expiration_minutes,
             "TokenValidityUnits": {
-                "AccessToken": "MINUTES",
+                "AccessToken": "minutes",
                 "RefreshToken": refresh_token_unit,
-                "IdToken": "MINUTES"
+                "IdToken": "minutes"
             },
             "ReadAttributes": read_attributes,
             "WriteAttributes": write_attributes,
