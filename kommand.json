@@ -1,0 +1,391 @@
+{
+    "components": {
+        "user_pool": {
+            "type": "ext",
+            "displayname": "CK Cognito User Pool",
+            "description": "Deploys an Cognito User Pool. User Pools are used to authenticate users and manage user data.",
+            "cloud": "AWS",
+            "resources": ["AWS::cognito::userpool"],
+            "policy": {
+                "Version": "2012-10-17",
+                "Statement": [{
+                    "Sid": "Vis",
+                    "Effect": "Allow",
+                    "Action": [
+                        "cognito-idp:CreateUserPool",
+                        "cognito-idp:DeleteUserPool",
+                        "cognito-idp:DescribeUserPool",
+                        "cognito-idp:UpdateUserPool"
+                    ],
+                    "Resource": "*"
+                }]
+            },
+            "props": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the user pool, possibly auto-generated"
+                },
+                "id": {
+                    "type": "string",
+                    "description": "The ID of the user pool, which is part of the URL. Pattern '{region}_xxxxxxxxx'"
+                },
+                "arn": {
+                    "type": "string",
+                    "description": "The ARN of the user pool"
+                }
+            },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The desired user pool name. Will be auto-generated if not provided"
+                    },
+                    "password_policy": {
+                        "type": "object",
+                        "description": "The password policy for the user pool",
+                        "properties": {
+                            "MinimumLength": {
+                                "type": "integer",
+                                "description": "The minimum length of the password",
+                                "default": 8
+                            },
+                            "RequireLowercase": {
+                                "type": "boolean",
+                                "description": "If true, the password must contain at least one lowercase letter",
+                                "default": true
+                            },
+                            "RequireUppercase": {
+                                "type": "boolean",
+                                "description": "If true, the password must contain at least one uppercase letter",
+                                "default": true
+                            },
+                            "RequireNumbers": {
+                                "type": "boolean",
+                                "description": "If true, the password must contain at least one number",
+                                "default": true
+                            },
+                            "RequireSymbols": {
+                                "type": "boolean",
+                                "description": "If true, the password must contain at least one symbol",
+                                "default": true
+                            }
+                        }
+                    },
+                    "pre_sign_up_lambda_arn": {
+                        "type": "string",
+                        "description": "The ARN of the Lambda function to be called before a user is created"
+                    },
+                    "custom_message_lambda_arn": {
+                        "type": "string",
+                        "description": "The ARN of the Lambda function to be called when a custom message is sent to a user"
+                    },
+                    "post_confirmation_lambda_arn": {
+                        "type": "string",
+                        "description": "The ARN of the Lambda function to be called after a user is confirmed"
+                    },
+                    "pre_authentication_lambda_arn": {
+                        "type": "string",
+                        "description": "The ARN of the Lambda function to be called before a user is authenticated"
+                    },
+                    "post_authentication_lambda_arn": {
+                        "type": "string",
+                        "description": "The ARN of the Lambda function to be called after a user is authenticated"
+                    },
+                    "deferred_authentication_lambda_arn": {
+                        "type": "string",
+                        "description": "The ARN of the Lambda function to be called after a user is authenticated"
+                    },
+                    "create_auth_challenge_lambda_arn": {
+                        "type": "string",
+                        "description": "The ARN of the Lambda function to be called when a user is challenged"
+                    },
+                    "define_auth_challenge_lambda_arn": {
+                        "type": "string",
+                        "description": "The ARN of the Lambda function to be called when a user is challenged"
+                    },
+                    "verify_auth_challenge_response_lambda_arn": {
+                        "type": "string",
+                        "description": "The ARN of the Lambda function to be called when a user is challenged"
+                    },
+                    "pre_token_generation_lambda_arn": {
+                        "type": "string",
+                        "description": "The ARN of the Lambda function to be called before a user is authenticated"
+                    },
+                    "user_migration_lambda_arn": {
+                        "type": "string",
+                        "description": "The ARN of the Lambda function to be called when a user is authenticated"
+                    },
+                    "custom_sms_sender_lambda_arn": {
+                        "type": "string",
+                        "description": "The ARN of the Lambda function to be called when a user is challenged"
+                    },
+                    "custom_email_sender_lambda_arn": {
+                        "type": "string",
+                        "description": "The ARN of the Lambda function to be called when a user is challenged"
+                    },
+                    "auto_verified_attributes": {
+                        "type": "array",
+                        "description": "The attributes that are automatically verified when the user signs up",
+                        "default": ["email"]
+                    },
+                    "alias_attributes": {
+                        "type": "array",
+                        "description": "The attributes that are automatically verified when the user signs up",
+                        "default": ["preferred_username", "phone_number", "email"]
+                    },
+                    "username_attributes": {
+                        "type": ["array", "null"],
+                        "description": "The attributes that are automatically verified when the user signs up",
+                        "default": null
+                    },
+                    "sms_verification_message": {
+                        "type": "string",
+                        "description": "The message that is sent to the user when they are sent a verification code",
+                        "default": "Your verification code is {####}"
+                    },
+                    "email_verification_message": {
+                        "type": "string",
+                        "description": "The message that is sent to the user when they are sent a verification code",
+                        "default": "Your verification code is {####}"
+                    },
+                    "email_verification_subject": {
+                        "type": "string",
+                        "description": "The subject of the email that is sent to the user when they are sent a verification code",
+                        "default": "Your Verification Code"
+                    },
+                    "sms_authentication_message": {
+                        "type": "string",
+                        "description": "The message that is sent to the user when they are sent a verification code",
+                        "default": "Your authentication code is {####}. "
+                    },
+                    "mfa": {
+                        "type": "string",
+                        "description": "When to enable MFA",
+                        "enum": ["OFF", "OPTIONAL", "REQUIRED"]
+                    },
+                    "user_attribute_update_settings": {
+                        "type": "object",
+                        "description": "A description of what properties need to be verified before the user was updated",
+                        "properties": {
+                            "AttributesRequireVerificationBeforeUpdate": {
+                                "type": "array"
+                            }
+                        }
+                    },
+                    "remember_device": {
+                        "type": "string",
+                        "description": "When to enable remember device",
+                        "enum": ["ALWAYS", "USER_OPT_IN", "NEVER"],
+                        "default": "ALWAYS"
+                    },
+                    "ses_email_address_arn": {
+                        "type": "string",
+                        "description": "The ARN of the SES email address"
+                    },
+                    "reply_to_email_address": {
+                        "type": "string",
+                        "description": "The reply to email address"
+                    },
+                    "sms_role_arn": {
+                        "type": "string",
+                        "description": "The ARN of the SMS role"
+                    },
+                    "sms_external_id": {
+                        "type": "string",
+                        "description": "The external ID of the SMS role"
+                    },
+                    "sms_region": {
+                        "type": "string",
+                        "description": "The region of the SMS role"
+                    },
+                    "allow_admin_create_user_only": {
+                        "type": "boolean",
+                        "description": "If true, only the administrator can create a user",
+                        "default": false
+                    },
+                    "unused_invite_validity_days": {
+                        "type": "integer",
+                        "description": "The number of days that an unused invite is valid",
+                        "default": 7
+                    },
+                    "invite_sms_message": {
+                        "type": "string",
+                        "description": "The message that is sent to the user when they are sent an invite",
+                        "default": "Your username is {username} and temporary password is {####}. "
+                    },
+                    "invite_email_message": {
+                        "type": "string",
+                        "description": "The message that is sent to the user when they are sent an invite",
+                        "default": "Your username is {username} and temporary password is {####}. "
+                    },
+                    "invite_email_subject": {
+                        "type": "string",
+                        "description": "The subject of the email that is sent to the user when they are sent an invite",
+                        "default": "Your temporary password"
+                    },
+                    "advanced_security_mode": {
+                        "type": "string",
+                        "description": "The advanced security mode",
+                        "enum": ["OFF", "AUDIT", "ENFORCED"],
+                        "default": "OFF"
+                    },
+                    "sign_up_required_attributes": {
+                        "type": "array",
+                        "description": "The attributes that are required when a user signs up",
+                        "default": []
+                    },
+                    "custom_attributes": {
+                        "type": "array",
+                        "description": "The attributes that are required when a user signs up"
+                    },
+                    "username_case_sensitive": {
+                        "type": "boolean",
+                        "description": "If true, the username is case sensitive",
+                        "default": false
+                    },
+                    "prefer_phone_number_recovery": {
+                        "type": "boolean",
+                        "description": "If true, the user can use their phone number to recover their account",
+                        "default": false
+                    },
+                    "tags": {
+                        "type": "object",
+                        "description": "A set of key-value pairs to attach to this API Gateway custom domain name as tags"
+                    }
+                }
+            }
+        },
+        "user_pool_client": {
+            "type": "ext",
+            "displayname": "CK Cognito User Pool Client",
+            "description": "Deploys an Cognito User Pool Client. User Pool Clients are app clients that get credentials to use a user pool.",
+            "cloud": "AWS",
+            "resources": ["AWS::cognito::userpoolclient"],
+            "policy": {
+                "Version": "2012-10-17",
+                "Statement": [{
+                    "Sid": "Vis",
+                    "Effect": "Allow",
+                    "Action": [
+                        "cognito-idp:DescribeUserPool",
+                        "cognito-idp:CreateUserPoolClient",
+                        "cognito-idp:DeleteUserPoolClient",
+                        "cognito-idp:DescribeUserPoolClient",
+                        "cognito-idp:UpdateUserPoolClient"
+                    ],
+                    "Resource": "*"
+                }]
+            },
+            "props": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the client, possibly auto-generated"
+                },
+                "id": {
+                    "type": "string",
+                    "description": "The ID of the client"
+                },
+                "secret": {
+                    "type": "string",
+                    "description": "The secret associated with the client, to be used in combination with the client ID"
+                },
+                "user_pool_id": {
+                    "type": "string",
+                    "description": "The ID of the user pool to which the client belongs"
+                }
+            },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "user_pool_id": {
+                        "type": "string",
+                        "description": "The ID of the user pool this client should be associated with",
+                        "requried": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The desired user pool client name. Will be auto-generated if not provided"
+                    },
+                    "generate_secret": {
+                        "type": "boolean",
+                        "description": "If true, a secret will be generated for the client",
+                        "default": true
+                    },
+                    "access_token_expiration_minutes": {
+                        "type": "string",
+                        "description": "The number of minutes the access token is valid after being issued",
+                        "default": 60
+                    },
+                    "id_token_expiration_minutes": {
+                        "type": "string",
+                        "description": "The number of minutes the ID token is valid after being issued",
+                        "default": 60
+                    },
+                    "refresh_token_expiration_minutes": {
+                        "type": "string",
+                        "description": "The number of minutes the refresh token is valid after being issued",
+                        "default": 43200
+                    },
+                    "auth_flows": {
+                        "type": "array",
+                        "description": "The authentication flows that the client can use",
+                        "default": ["ALLOW_CUSTOM_AUTH", "ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"],
+                        "items": {
+                            "type": "string",
+                            "enum": ["ALLOW_ADMIN_USER_PASSWORD_AUTH", "ALLOW_CUSTOM_AUTH", "ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
+                        }
+                    },
+                    "oauth_flows": {
+                        "type": "array",
+                        "description": "The OAuth flows that the client can use",
+                        "default": ["client_credentials"]
+                    },
+                    "oauth_scopes": {
+                        "type": "array",
+                        "description": "The OAuth scopes that the client can use. Some examples are 'phone', 'email', 'openid', 'profile', 'aws.cognito.signin.user.admin'"
+                    },
+                    "token_revocation": {
+                        "type": "boolean",
+                        "description": "If true, the client can revoke its own tokens. Setting this to true increases token size",
+                        "default": false
+                    },
+                    "read_attributes": {
+                        "type": "array",
+                        "description": "The attributes that the client can read from the user pool"
+                    },
+                    "write_attributes": {
+                        "type": "array",
+                        "description": "The attributes that the client can write to the user pool"
+                    },
+                    "supported_identity_providers": {
+                        "type": "array",
+                        "description": "The identity providers that the client can use. Ex: ['Facebook', 'Google', 'COGNITO']",
+                        "default": ["COGNITO"]
+                    },
+                    "callback_urls": {
+                        "type": "array",
+                        "description": "Only use if you are using custom identity providers. The URLs that the client can redirect to after authentication."
+                    },
+                    "logout_urls": {
+                        "type": "array",
+                        "description": "Only use if you are using custom identity providers. The URLs that the client can redirect to after logout."
+                    },
+                    "default_redirect_uri": {
+                        "type": "string",
+                        "description": "Only use if you are using custom identity providers. The default callback_url"
+                    },
+                    "prevent_user_existence_errors": {
+                        "type": "string",
+                        "description": "Pass LEGACY if you want an exception thrown if the user does not exist. Otherwise the user not existing is treated the same as any other incorrect login",
+                        "default": "ENABLED",
+                        "enum": ["ENABLED", "LEGACY"]
+                    }
+                }
+            }
+        }
+    },
+    "repos": {
+        "route53": "https://github.com/cloudkommand/route53"
+    }
+}
