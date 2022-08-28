@@ -570,7 +570,7 @@
                     "oauth_flows": {
                         "type": "array",
                         "description": "The OAuth flows that the client can use",
-                        "default": ["code", "implicit", "client_credentials"]
+                        "default": ["client_credentials"]
                     },
                     "oauth_scopes": {
                         "type": "array",
