@@ -443,13 +443,23 @@ def get_user_pool(attributes, cdef, region):
         #If they are different, then update the user pool
         # Get all attributes and compare them all ( this catches add, update, AND remove )
         all_attrs = set(user_pool.keys().extend(attributes.keys()))
-        for k in all_attrs:
+        attrs_to_ignore = [
+            'CreationDate', # Not user-settable
+            'Name', # Not user-settable
+            'EstimatedNumberOfUsers', # Not relevant
+            'SchemaAttributes', # Duplicate of "Schema"
+            'LastModifiedDate', # Not user-settable
+            'Arn', # Not user-settable
+            'Id', # Not user-settable
+        ]
+        attrs_to_use = [attr for attr in all_attrs if attr not in attrs_to_ignore]
+        for k in attrs_to_use:
         # for k,v in attributes.items():
 
             #If we are working with the password policy, remove temp_valid_days from comparison
             if k == "Policies":
                 current_pp = user_pool["Policies"].get("PasswordPolicy", {})
-                desired_pp = v["PasswordPolicy"]
+                desired_pp = attributes["PasswordPolicy"]
                 _ = current_pp.pop("TemporaryPasswordValidityDays", None)
                 print(f"current_pp = {current_pp}")
                 print(f"desired_pp = {desired_pp}")
