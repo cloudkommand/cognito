@@ -441,7 +441,10 @@ def get_user_pool(attributes, cdef, region):
 
         #Loop through the attributes and compare them to the current attributes
         #If they are different, then update the user pool
-        for k,v in attributes.items():
+        # Get all attributes and compare them all ( this catches add, update, AND remove )
+        all_attrs = set(user_pool.keys().extend(attributes.keys()))
+        for k in all_attrs:
+        # for k,v in attributes.items():
 
             #If we are working with the password policy, remove temp_valid_days from comparison
             if k == "Policies":
@@ -454,12 +457,14 @@ def get_user_pool(attributes, cdef, region):
                     eh.add_op("update_user_pool", {"id": user_pool_id, "attributes": attributes})
                     break
                 
-            elif k not in ["Schema", "PoolName"] and (str(user_pool.get(k)).lower() != str(v).lower()):
+            elif k not in ["Schema", "PoolName"] and (str(user_pool.get(k)).lower() != str(attributes.get(k)).lower()):
                 eh.add_op("update_user_pool")
                 print(k)
-                print(v)
+                print(user_pool.get(k))
+                print(attributes.get(k))
                 print(type(k))
-                print(type(v))
+                print(type(user_pool.get(k)))
+                print(type(attributes.get(k)))
                 break
 
         eh.add_props({
