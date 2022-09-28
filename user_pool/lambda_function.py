@@ -442,7 +442,7 @@ def get_user_pool(attributes, cdef, region):
         #Loop through the attributes and compare them to the current attributes
         #If they are different, then update the user pool
         # Get all attributes and compare them all ( this catches add, update, AND remove )
-        all_attrs = set(user_pool.keys().extend(attributes.keys()))
+        all_attrs = set(list(user_pool.keys()).extend(list(attributes.keys())))
         attrs_to_ignore = [
             'CreationDate', # Not user-settable
             'Name', # Not user-settable
