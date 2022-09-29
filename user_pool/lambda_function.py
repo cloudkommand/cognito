@@ -464,7 +464,7 @@ def get_user_pool(attributes, cdef, region):
             #If we are working with the password policy, remove temp_valid_days from comparison
             if k == "Policies":
                 current_pp = user_pool["Policies"].get("PasswordPolicy", {})
-                desired_pp = attributes["PasswordPolicy"]
+                desired_pp = attributes["Policies"].get("PasswordPolicy", {})
                 _ = current_pp.pop("TemporaryPasswordValidityDays", None)
                 print(f"current_pp = {current_pp}")
                 print(f"desired_pp = {desired_pp}")
