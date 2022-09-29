@@ -456,7 +456,7 @@ def get_user_pool(attributes, cdef, region):
             'Id', # Not user-settable
         ]
         attrs_to_use = [attr for attr in all_attrs if attr not in attrs_to_ignore]
-        print(attrs_to_use)
+        # print(attrs_to_use)
         for k in attrs_to_use:
         # for k,v in attributes.items():
 
@@ -473,12 +473,12 @@ def get_user_pool(attributes, cdef, region):
                 
             elif k not in ["Schema", "PoolName"] and (str(user_pool.get(k)).lower() != str(attributes.get(k)).lower()):
                 eh.add_op("update_user_pool")
-                print(k)
-                print(user_pool.get(k))
-                print(attributes.get(k))
-                print(type(k))
-                print(type(user_pool.get(k)))
-                print(type(attributes.get(k)))
+                # print(k)
+                # print(user_pool.get(k))
+                # print(attributes.get(k))
+                # print(type(k))
+                # print(type(user_pool.get(k)))
+                # print(type(attributes.get(k)))
                 break
 
         eh.add_props({
