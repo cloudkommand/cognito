@@ -363,6 +363,8 @@ def lambda_handler(event, context):
         }
 
         tags = cdef.get("tags")
+        print(tags)
+        print(cdef)
 
         pass_back_data = event.get("pass_back_data", {})
         if pass_back_data:
@@ -444,6 +446,7 @@ def get_user_pool(attributes, cdef, region):
         # Get all attributes and compare them all ( this catches add, update, AND remove )
         all_attrs_temp = list(user_pool.keys()).extend(list(attributes.keys()))
         all_attrs = set(all_attrs_temp)
+        print(all_attrs)
         attrs_to_ignore = [
             'CreationDate', # Not user-settable
             'Name', # Not user-settable
