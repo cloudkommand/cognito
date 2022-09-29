@@ -362,8 +362,7 @@ def lambda_handler(event, context):
             ]  
         }
 
-        tags = cdef.get("tags", None)
-        print(tags)
+        tags = cdef.get("tags", {})
 
         pass_back_data = event.get("pass_back_data", {})
         if pass_back_data:
@@ -412,7 +411,6 @@ def lambda_handler(event, context):
         })
 
         # attributes = {k:str(v) for k,v in attributes.items() if not isinstance(v, dict)}
-        print("line 415")
         print(attributes)
 
         get_user_pool(attributes, cdef, region)
