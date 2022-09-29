@@ -362,7 +362,7 @@ def lambda_handler(event, context):
             ]  
         }
 
-        tags = cdef.get("tags")
+        tags = cdef.get("tags", {})
 
         pass_back_data = event.get("pass_back_data", {})
         if pass_back_data:
@@ -441,12 +441,29 @@ def get_user_pool(attributes, cdef, region):
 
         #Loop through the attributes and compare them to the current attributes
         #If they are different, then update the user pool
-        for k,v in attributes.items():
+        # Get all attributes and compare them all ( this catches add, update, AND remove )
+        all_keys = list(user_pool.keys())
+        attr_keys = list(attributes.keys())
+        all_keys.extend(attr_keys)
+        all_attrs = set(all_keys)
+        attrs_to_ignore = [
+            'CreationDate', # Not user-settable
+            'Name', # Not user-settable
+            'EstimatedNumberOfUsers', # Not relevant
+            'SchemaAttributes', # Duplicate of "Schema"
+            'LastModifiedDate', # Not user-settable
+            'Arn', # Not user-settable
+            'Id', # Not user-settable
+        ]
+        attrs_to_use = [attr for attr in all_attrs if attr not in attrs_to_ignore]
+        # print(attrs_to_use)
+        for k in attrs_to_use:
+        # for k,v in attributes.items():
 
             #If we are working with the password policy, remove temp_valid_days from comparison
             if k == "Policies":
                 current_pp = user_pool["Policies"].get("PasswordPolicy", {})
-                desired_pp = v["PasswordPolicy"]
+                desired_pp = attributes["Policies"].get("PasswordPolicy", {})
                 _ = current_pp.pop("TemporaryPasswordValidityDays", None)
                 print(f"current_pp = {current_pp}")
                 print(f"desired_pp = {desired_pp}")
@@ -454,12 +471,14 @@ def get_user_pool(attributes, cdef, region):
                     eh.add_op("update_user_pool", {"id": user_pool_id, "attributes": attributes})
                     break
                 
-            elif k not in ["Schema", "PoolName"] and (str(user_pool.get(k)).lower() != str(v).lower()):
+            elif k not in ["Schema", "PoolName"] and (str(user_pool.get(k)).lower() != str(attributes.get(k)).lower()):
                 eh.add_op("update_user_pool")
-                print(k)
-                print(v)
-                print(type(k))
-                print(type(v))
+                # print(k)
+                # print(user_pool.get(k))
+                # print(attributes.get(k))
+                # print(type(k))
+                # print(type(user_pool.get(k)))
+                # print(type(attributes.get(k)))
                 break
 
         eh.add_props({
