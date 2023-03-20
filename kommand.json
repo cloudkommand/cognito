@@ -5,6 +5,7 @@
             "displayname": "CK Cognito User Pool",
             "description": "Deploys an Cognito User Pool. User Pools are used to authenticate users and manage user data.",
             "cloud": "AWS",
+            "ck_plugin_tier": 2,
             "resources": ["AWS::cognito::userpool"],
             "policy": {
                 "Version": "2012-10-17",
@@ -39,7 +40,8 @@
                 "properties": {
                     "name": {
                         "type": "string",
-                        "description": "The desired user pool name. Will be auto-generated if not provided"
+                        "description": "The desired user pool name. Will be auto-generated if not provided",
+                        "common": true
                     },
                     "password_policy": {
                         "type": "object",
@@ -142,27 +144,32 @@
                     "sms_verification_message": {
                         "type": "string",
                         "description": "The message that is sent to the user when they are sent a verification code",
-                        "default": "Your verification code is {####}"
+                        "default": "Your verification code is {####}",
+                        "common": true
                     },
                     "email_verification_message": {
                         "type": "string",
                         "description": "The message that is sent to the user when they are sent a verification code",
-                        "default": "Your verification code is {####}"
+                        "default": "Your verification code is {####}",
+                        "common": true
                     },
                     "email_verification_subject": {
                         "type": "string",
                         "description": "The subject of the email that is sent to the user when they are sent a verification code",
-                        "default": "Your Verification Code"
+                        "default": "Your Verification Code",
+                        "common": true
                     },
                     "sms_authentication_message": {
                         "type": "string",
                         "description": "The message that is sent to the user when they are sent a verification code",
-                        "default": "Your authentication code is {####}. "
+                        "default": "Your authentication code is {####}. ",
+                        "common": true
                     },
                     "mfa": {
                         "type": "string",
                         "description": "When to enable MFA",
-                        "enum": ["OFF", "OPTIONAL", "REQUIRED"]
+                        "enum": ["OFF", "OPTIONAL", "REQUIRED"],
+                        "common": true
                     },
                     "user_attribute_update_settings": {
                         "type": "object",
@@ -177,7 +184,8 @@
                         "type": "string",
                         "description": "When to enable remember device",
                         "enum": ["ALWAYS", "USER_OPT_IN", "NEVER"],
-                        "default": "ALWAYS"
+                        "default": "ALWAYS",
+                        "common": true
                     },
                     "ses_email_address_arn": {
                         "type": "string",
@@ -251,16 +259,34 @@
                     },
                     "tags": {
                         "type": "object",
-                        "description": "A set of key-value pairs to attach to this API Gateway custom domain name as tags"
+                        "description": "A set of key-value pairs to attach to this API Gateway custom domain name as tags",
+                        "common": true
                     }
                 }
-            }
+            },
+            "examples": [
+                {
+                    "displayname": "Basic User Pool",
+                    "notes": "",
+                    "definition": {
+                        "type": "&cognito.user_pool",
+                        "remember_device": "NEVER",
+                        "mfa": "OPTIONAL",
+                        "email_verification_message": "Thank you for signing up to our service. Your verification code is {####}.",
+                        "sms_verification_message": "Thank you for signing up to our service. Your verification code is {####}.",
+                        "tags": {
+                            "CreatedBy": "CloudKite"
+                        }
+                    }
+                }
+            ]
         },
         "user_pool_client": {
             "type": "ext",
             "displayname": "CK Cognito User Pool Client",
-            "description": "Deploys an Cognito User Pool Client. User Pool Clients are app clients that get credentials to use a user pool.",
+            "description": "Deploys an Cognito User Pool Client. User Pool Clients are app clients that get credentials to use a user pool. In certain scenarios, you may not want to use this plugin, but rather create clients on the fly as part of your application.",
             "cloud": "AWS",
+            "ck_plugin_tier": 3,
             "resources": ["AWS::cognito::userpoolclient"],
             "policy": {
                 "Version": "2012-10-17",
@@ -300,8 +326,7 @@
                 "properties": {
                     "user_pool_id": {
                         "type": "string",
-                        "description": "The ID of the user pool this client should be associated with",
-                        "requried": true
+                        "description": "The ID of the user pool this client should be associated with"
                     },
                     "name": {
                         "type": "string",
@@ -315,17 +340,20 @@
                     "access_token_expiration_minutes": {
                         "type": "string",
                         "description": "The number of minutes the access token is valid after being issued",
-                        "default": 60
+                        "default": 60,
+                        "common": true
                     },
                     "id_token_expiration_minutes": {
                         "type": "string",
                         "description": "The number of minutes the ID token is valid after being issued",
-                        "default": 60
+                        "default": 60,
+                        "common": true
                     },
                     "refresh_token_expiration_minutes": {
                         "type": "string",
                         "description": "The number of minutes the refresh token is valid after being issued",
-                        "default": 43200
+                        "default": 43200,
+                        "common": true
                     },
                     "auth_flows": {
                         "type": "array",
@@ -334,7 +362,8 @@
                         "items": {
                             "type": "string",
                             "enum": ["ALLOW_ADMIN_USER_PASSWORD_AUTH", "ALLOW_CUSTOM_AUTH", "ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
-                        }
+                        },
+                        "common": true
                     },
                     "oauth_flows": {
                         "type": "array",
@@ -343,7 +372,8 @@
                     },
                     "oauth_scopes": {
                         "type": "array",
-                        "description": "The OAuth scopes that the client can use. Some examples are 'phone', 'email', 'openid', 'profile', 'aws.cognito.signin.user.admin'"
+                        "description": "The OAuth scopes that the client can use. Some examples are 'phone', 'email', 'openid', 'profile', 'aws.cognito.signin.user.admin'",
+                        "common": true
                     },
                     "token_revocation": {
                         "type": "boolean",
@@ -381,11 +411,21 @@
                         "default": "ENABLED",
                         "enum": ["ENABLED", "LEGACY"]
                     }
+                },
+                "required": ["user_pool_id"]
+            },
+            "examples": [
+                {
+                    "displayname": "Basic User Pool Client",
+                    "notes": "A basic user pool client that can be used to authenticate users",
+                    "definition": {
+                        "type": "&cognito.user_pool_client",
+                        "user_pool_id": "&user_pool:props.id",
+                        "access_token_expiration_minutes": 900,
+                        "auth_flows": ["ALLOW_CUSTOM_AUTH", "ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_ADMIN_USER_PASSWORD_AUTH"]
+                    }
                 }
-            }
+            ]
         }
-    },
-    "repos": {
-        "route53": "https://github.com/cloudkommand/route53"
     }
 }
